@@ -23,16 +23,40 @@ npm run icons        # regenerate PWA icons from public/icons/icon.svg
 The service worker only registers in a production build, so PWA install and offline
 behaviour must be tested through `npm run preview`, not `npm run dev`.
 
-## Getting it onto your phone
+## Installing it on a phone
 
-Both devices need to be on the same network.
+Live at **https://aryan-gavhale.github.io/daily-forge/**
 
-1. `npm run build && npm run preview` — Vite prints a `Network:` URL
-2. Open that URL on your phone
-3. Chrome shows an install banner; on iOS use **Share → Add to Home Screen**
+Open that on the phone and install it:
 
-Data is per-device. To move your history, export a backup on one device from
-**Me → Settings → Export backup** and import the file on the other.
+- **iOS** — open in Safari, then **Share → Add to Home Screen**
+- **Android** — Chrome offers an install banner, or **⋮ → Install app**
+
+Once installed it launches without browser chrome and runs fully offline; the
+service worker precaches the whole bundle on first visit.
+
+A service worker only registers on a secure context, so installing from
+`http://<lan-ip>:5183` will *not* give you offline support. Use the HTTPS URL
+above, not a LAN address.
+
+Data is per-origin and per-device. To move history between devices, use
+**Me → Settings → Export backup** and import the file on the other one. Deleting
+the home-screen icon deletes the database with it, so export occasionally.
+
+### Deploying
+
+```bash
+npm run deploy      # builds with the /daily-forge/ base, pushes to gh-pages
+```
+
+GitHub Pages serves a project site from `/<repo>/` rather than the domain root,
+so the asset URLs, manifest `scope`/`start_url` and the service worker's
+navigation fallback all need that prefix. `BASE_PATH` handles it:
+
+```bash
+npm run build                               # root-served host
+BASE_PATH=/daily-forge/ npm run build       # sub-path host
+```
 
 ## The eight pillars
 

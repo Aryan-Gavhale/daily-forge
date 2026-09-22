@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import AppShell from './components/shell/AppShell'
 import Today from './pages/Today'
+import Plan from './pages/Plan'
 import Me from './pages/Me'
 import Icon from './components/ui/Icon'
 import { setHapticsEnabled } from './lib/motion'
@@ -34,6 +35,7 @@ export function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<Today />} />
+        <Route path="/plan" element={<Plan />} />
         <Route
           path="/stats"
           element={
@@ -60,7 +62,7 @@ export function App() {
 /** Shape-matched placeholder while a lazy route's chunk arrives. */
 function PageSkeleton() {
   return (
-    <div className="px-5 pt-safe">
+    <div className="pad-x pt-safe">
       <div className="space-y-4 pt-8">
         <div className="h-8 w-32 animate-pulse rounded-lg bg-white/[0.05]" />
         <div className="h-[168px] animate-pulse rounded-card bg-white/[0.04]" />

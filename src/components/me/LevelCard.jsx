@@ -9,7 +9,7 @@ export function LevelCard({ level, streak, bests, name }) {
   const nextLevelXp = totalXpForLevel(level.level + 1)
 
   return (
-    <div className="px-5 pt-5">
+    <div className="pad-x pt-5">
       <div className="relative overflow-hidden rounded-[28px] border border-hair bg-ink-800/70 p-5 backdrop-blur-xl">
         <div
           className="pointer-events-none absolute -top-24 right-0 h-52 w-52 rounded-full blur-3xl"

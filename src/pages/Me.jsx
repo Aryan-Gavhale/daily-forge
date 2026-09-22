@@ -8,14 +8,15 @@ import ReportCards from '../components/me/ReportCards'
 import JournalHistory from '../components/me/JournalHistory'
 import { GoalsSheet, PillarSettingsSheet } from '../components/me/SettingsSheets'
 import { SettingsGroup, SettingsRow } from '../components/me/SettingsRow'
+import PlanSetupSheet from '../components/plan/PlanSetupSheet'
 import { useStore } from '../store/useStore'
 import { useUI } from '../store/useUI'
-import { useLevel, useStreak, useTodayKey } from '../hooks/useForge'
+import { useLevel, usePlan, useStreak, useTodayKey } from '../hooks/useForge'
 import { weeklyReportCards } from '../lib/scoring'
 import { journalEntries, personalBests } from '../lib/stats'
 import { generateSeed } from '../lib/seed'
 import { PILLARS } from '../data/pillars'
-import { todayKey } from '../lib/date'
+import { formatShort, todayKey } from '../lib/date'
 
 const TABS = [
   { value: 'progress', label: 'Progress' },
@@ -29,6 +30,7 @@ export function Me() {
   const settings = useStore((s) => s.settings)
   const level = useLevel()
   const streak = useStreak()
+  const plan = usePlan()
   const toast = useUI((s) => s.toast)
 
   const exportData = useStore((s) => s.exportData)
@@ -39,6 +41,7 @@ export function Me() {
   const [tab, setTab] = useState('progress')
   const [pillarSheet, setPillarSheet] = useState(false)
   const [goalsSheet, setGoalsSheet] = useState(false)
+  const [planSheet, setPlanSheet] = useState(false)
   const [confirm, setConfirm] = useState(null)
   const fileInput = useRef(null)
 
@@ -101,12 +104,17 @@ export function Me() {
 
       <LevelCard level={level} streak={streak} bests={bests} name={settings.name} />
 
-      <div className="px-5 pt-5">
+      <div className="pad-x pt-5 lg:max-w-md">
         <Segmented options={TABS} value={tab} onChange={setTab} />
       </div>
 
       {tab === 'progress' && (
-        <Section title="Weekly report cards" subtitle="Graded A+ to F per pillar" delay={0.02}>
+        <Section
+          title="Weekly report cards"
+          subtitle="Graded A+ to F per pillar"
+          delay={0.02}
+          className="lg:max-w-3xl"
+        >
           <ReportCards cards={cards} />
         </Section>
       )}
@@ -116,14 +124,15 @@ export function Me() {
           title="Journal"
           subtitle={journal.length ? `${journal.length} entries` : undefined}
           delay={0.02}
+          className="lg:max-w-3xl"
         >
           <JournalHistory entries={journal} />
         </Section>
       )}
 
       {tab === 'settings' && (
-        <>
-          <Section title="Rules" delay={0.02}>
+        <div className="desk-cols">
+          <Section title="Rules" delay={0.02} className="lg:col-span-6">
             <SettingsGroup>
               <SettingsRow
                 icon="target"
@@ -141,6 +150,17 @@ export function Me() {
                 onClick={() => setPillarSheet(true)}
               />
               <SettingsRow
+                icon="map"
+                accent={plan.phase.accent}
+                label="The 16-week plan"
+                detail={
+                  settings.planEnabled === false
+                    ? 'Hidden'
+                    : `Week ${plan.currentWeek} · started ${formatShort(plan.startKey)}`
+                }
+                onClick={() => setPlanSheet(true)}
+              />
+              <SettingsRow
                 icon="wallet"
                 accent="#32d583"
                 label="Budget and savings"
@@ -150,7 +170,12 @@ export function Me() {
             </SettingsGroup>
           </Section>
 
-          <Section title="Your data" subtitle="Everything lives on this device" delay={0.04}>
+          <Section
+            title="Your data"
+            subtitle="Everything lives on this device"
+            delay={0.04}
+            className="lg:col-span-6"
+          >
             <SettingsGroup>
               <SettingsRow
                 icon="download"
@@ -187,7 +212,7 @@ export function Me() {
             </SettingsGroup>
           </Section>
 
-          <Section title="About" delay={0.06}>
+          <Section title="About" delay={0.06} className="lg:col-span-12">
             <div className="rounded-card border border-hair bg-ink-800/50 p-4 backdrop-blur-xl">
               <p className="text-[13px] leading-relaxed text-white/45">
                 Forge stores every entry in this browser&rsquo;s local database. Nothing is sent
@@ -198,7 +223,7 @@ export function Me() {
               </p>
             </div>
           </Section>
-        </>
+        </div>
       )}
 
       <div className="h-4" />
@@ -213,6 +238,7 @@ export function Me() {
 
       <PillarSettingsSheet open={pillarSheet} onClose={() => setPillarSheet(false)} />
       <GoalsSheet open={goalsSheet} onClose={() => setGoalsSheet(false)} />
+      <PlanSetupSheet open={planSheet} onClose={() => setPlanSheet(false)} />
 
       <Sheet
         open={confirm === 'seed'}

@@ -43,15 +43,15 @@ export function PageHeader({ eyebrow, title, trailing, children }) {
         </div>
       </motion.div>
 
-      <div className="px-5 pt-safe">
+      <div className="pad-x pt-safe">
         <motion.div
           style={{ opacity: titleOpacity, y: titleY, scale: titleScale }}
-          className="origin-left pt-4"
+          className="origin-left pt-4 lg:pt-8"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               {eyebrow && <p className="label-eyebrow mb-1.5">{eyebrow}</p>}
-              <h1 className="text-[30px] font-bold leading-[1.1] tracking-tightest text-white">
+              <h1 className="text-[30px] font-bold leading-[1.1] tracking-tightest text-white lg:text-[36px]">
                 {title}
               </h1>
             </div>

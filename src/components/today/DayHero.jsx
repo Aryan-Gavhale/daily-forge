@@ -15,7 +15,7 @@ export function DayHero({ evaluation, streak }) {
   const hoursLeft = Math.ceil(hoursLeftToday())
 
   return (
-    <div className="relative px-5 pt-5">
+    <div className="relative pad-x pt-5">
       <div className="relative overflow-hidden rounded-[28px] border border-hair bg-ink-800/70 px-5 pb-5 pt-6 backdrop-blur-xl">
         <div
           className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full blur-3xl"

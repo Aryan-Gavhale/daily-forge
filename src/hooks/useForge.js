@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../store/useStore'
 import { computeStreak, evaluateDay, lastBrokenStreak, levelState } from '../lib/scoring'
+import { evaluatePlan } from '../lib/plan'
 import { todayKey } from '../lib/date'
 
 /**
@@ -55,6 +56,18 @@ export function useLevel() {
   const settings = useStore((s) => s.settings)
   const today = useTodayKey()
   return useMemo(() => levelState(days, settings, today), [days, settings, today])
+}
+
+/** The whole 16-week plan, scored against both plan records and the pillar log. */
+export function usePlan() {
+  const days = useStore((s) => s.days)
+  const plan = useStore((s) => s.plan)
+  const settings = useStore((s) => s.settings)
+  const today = useTodayKey()
+  return useMemo(
+    () => evaluatePlan({ plan, days, settings, now: today }),
+    [plan, days, settings, today]
+  )
 }
 
 /**

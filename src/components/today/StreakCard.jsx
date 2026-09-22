@@ -20,7 +20,7 @@ export function StreakCard({ streak, level }) {
   const hot = alive && !streak.atRisk
 
   return (
-    <div className="px-5 pt-3">
+    <div className="pad-x pt-3">
       <div className="overflow-hidden rounded-card border border-hair bg-ink-800/70 backdrop-blur-xl">
         <div className="flex items-center gap-3.5 px-4 pt-4">
           <motion.span

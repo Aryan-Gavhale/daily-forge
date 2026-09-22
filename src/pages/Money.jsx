@@ -77,35 +77,42 @@ export function Money() {
         }
       />
 
-      <BudgetCard
-        spent={spent}
-        budget={settings.monthlyBudget}
-        saved={saved}
-        savingsGoal={settings.savingsGoal}
-        noSpend={noSpend}
-        currency={currency}
-        daysLeft={daysLeft}
-      />
+      {/* Column spans rather than nested columns, so the phone order is
+          untouched and the desktop rows still add up to twelve. */}
+      <div className="desk-cols">
+        <div className="lg:col-span-5">
+          <BudgetCard
+            spent={spent}
+            budget={settings.monthlyBudget}
+            saved={saved}
+            savingsGoal={settings.savingsGoal}
+            noSpend={noSpend}
+            currency={currency}
+            daysLeft={daysLeft}
+          />
+        </div>
 
-      {series.length > 0 && (
-        <Section title="Pace" delay={0.03}>
-          <SpendChart series={series} dailyBudget={dailyBudget} currency={currency} />
+        {series.length > 0 && (
+          <Section title="Pace" delay={0.03} className="lg:col-span-7">
+            <SpendChart series={series} dailyBudget={dailyBudget} currency={currency} />
+          </Section>
+        )}
+
+        {categories.length > 0 && (
+          <Section title="Where it went" delay={0.05} className="lg:col-span-5">
+            <CategoryBreakdown rows={categories} currency={currency} />
+          </Section>
+        )}
+
+        <Section
+          title="Transactions"
+          subtitle={groups.length ? 'Swipe a row left to delete' : undefined}
+          delay={0.07}
+          className="lg:col-span-7"
+        >
+          <ExpenseList groups={groups} currency={currency} onDelete={handleDelete} />
         </Section>
-      )}
-
-      {categories.length > 0 && (
-        <Section title="Where it went" delay={0.05}>
-          <CategoryBreakdown rows={categories} currency={currency} />
-        </Section>
-      )}
-
-      <Section
-        title="Transactions"
-        subtitle={groups.length ? 'Swipe a row left to delete' : undefined}
-        delay={0.07}
-      >
-        <ExpenseList groups={groups} currency={currency} onDelete={handleDelete} />
-      </Section>
+      </div>
 
       <div className="h-4" />
 

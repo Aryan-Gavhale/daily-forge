@@ -1,8 +1,13 @@
 # Forge — Daily Growth Tracker
 
-A local-first, installable PWA that tracks eight daily growth pillars with a strict
-XP and streak system, plus a beat-your-past-self comparison layer. Built mobile-first
-so it looks and moves like a native phone app.
+A local-first, installable PWA with two halves: eight daily growth pillars scored on a
+strict XP and streak system, and a fixed 16-week plan that says what this week is
+supposed to produce. The pillars answer *did I show up today*; the plan answers *am I
+still on schedule*.
+
+It is designed at phone width and it stays a phone on a handset. On a desktop window it
+becomes a desktop app — a permanent left rail and pages that spread into columns rather
+than scrolling as one long strip.
 
 No backend, no accounts, no external APIs. Everything lives in this browser's
 IndexedDB, with JSON export and import for backup.
@@ -43,6 +48,8 @@ Data is per-origin and per-device. To move history between devices, use
 **Me → Settings → Export backup** and import the file on the other one. Deleting
 the home-screen icon deletes the database with it, so export occasionally.
 
+A backup written before the plan existed still imports; it simply has no plan records.
+
 ### Deploying
 
 ```bash
@@ -76,6 +83,39 @@ extras that award flat bonus XP but never gate completion.
 
 Every target and XP weight is editable in **Me → Settings → Pillar targets and XP**,
 and any pillar can be switched off entirely.
+
+## The 16-week plan
+
+A separate screen from the pillars, and a separate store, so editing one never disturbs
+the other. Sixteen weeks in four months:
+
+| Month | Weeks | Phase | What it is for |
+| --- | --- | --- | --- |
+| 1 | 1–4 | Reset | CF thinking, the contest habit, an honest resume |
+| 2 | 5–8 | Past papers | NeetCode as the main block, LLD starts, Redis frozen |
+| 3 | 9–12 | Apply and mock | Applications out, one mock a week, HLD kept light |
+| 4 | 13–16 | Loops | Interview simulation and overlapping loops |
+
+Each week is a handful of tasks across four tracks — DSA, design, the Redis project, and
+career. A task is one of three kinds:
+
+- **auto** — read straight off the pillar log, so logging a Codeforces session fills the
+  week in. Codeforces problems, contests played and System Design minutes work this way,
+  and the row has no control at all: giving it a tick box would invite double counting.
+- **count** — a number you type, for work the pillars cannot see: NeetCode problems, LLDs
+  coded, mocks, applications, STAR stories.
+- **check** — done or not done.
+
+Weeks in the future are readable but not tickable. Month-end **gates** are deliberately
+subjective checks ("can you regenerate these problems", not "have you done 40"), each with
+the instruction for when the answer is no.
+
+The hero card draws a marker on the progress bar showing where the calendar is, because
+40% done in week 12 is not "40% done", it is behind.
+
+Week 1 always starts on a Monday, so plan weeks line up with the weekly report cards.
+Change the start date, hide the plan, or clear its progress in **Me → Settings → The
+16-week plan**. Moving the start date re-dates the weeks and keeps what you ticked.
 
 ## How scoring works
 
@@ -111,23 +151,46 @@ It replaces logged days and expenses but keeps your targets and goals.
 src/
   data/pillars.js       the 8 definitions, widget kinds, targets, bonus rules
   data/levels.js        XP curve, ranks, grade thresholds, day verdicts
+  data/plan.js          the 16 weeks, tracks, gates, rules, scope cuts
   lib/db.js             IndexedDB schema, export/import
   lib/date.js           local day keys, week boundaries, formatting
   lib/scoring.js        XP, day verdict, streaks, weekly grades
   lib/stats.js          rolling averages, week-over-week, personal bests, money
+  lib/plan.js           plan week maths, auto metrics, gates, pace
   lib/seed.js           demo history generator
   lib/motion.js         shared springs, easings, haptics
+  lib/useMediaQuery.js  the two breakpoints the markup branches on
   store/useStore.js     zustand, IDB-hydrated, write-through
   store/useUI.js        sheet stack and toast queue
-  components/shell/     AppShell, TabBar, PageHeader, install and update prompts
+  components/shell/     AppShell, TabBar, SideNav, PageHeader, install and update prompts
   components/ui/        Sheet, Ring, Counter, Toast, Burst, Field, Icon, Section
   components/pillars/   PillarCard, LogSheet, QuickLogSheet
+  components/plan/      PlanHero, WeekBoard, WeekTimeline, GateCard, PlanStrip
   components/today|stats|money|me/
-  pages/                Today, Stats, Money, Me
+  pages/                Today, Plan, Stats, Money, Me
 ```
 
-`lib/scoring.js` and `lib/stats.js` are pure functions with no React or storage
-dependencies, so the rules can be reasoned about on their own.
+`lib/scoring.js`, `lib/stats.js` and `lib/plan.js` are pure functions with no React or
+storage dependencies, so the rules can be reasoned about on their own.
+
+## Responsive layout
+
+Two shells, one app. Under 1024px it is a phone — full-bleed on a handset, a centred
+device frame on a tablet-sized window so the layout is never stretched past the width it
+was designed at. At 1024px and up the bezel is dropped for a sidebar, a wider gutter, and
+multi-column pages. Sheets stop being sheets at 768px and become centred dialogs.
+
+A page is still written once, as a single stack of blocks:
+
+```css
+--pad-x            the gutter every top-level block carries, via .pad-x
+.desk-cols         turns part of that stack into a 12-column grid on a large
+                   screen and zeroes the gutter its children were carrying,
+                   because the grid now supplies it
+```
+
+So `<Section className="lg:col-span-7">` is the whole diff between a phone row and a
+desktop column, and the phone ordering of a page is never rearranged to get one.
 
 ## Notes
 

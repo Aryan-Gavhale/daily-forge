@@ -21,7 +21,7 @@ export function StreakBreakNotice() {
           animate={{ opacity: 1, height: 'auto', y: 0 }}
           exit={{ opacity: 0, height: 0, y: -8 }}
           transition={spring}
-          className="overflow-hidden px-5 pt-3"
+          className="overflow-hidden pad-x pt-3"
         >
           <div className="relative overflow-hidden rounded-card border border-bad/30 bg-bad/[0.08] p-4">
             <div

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import {
   buildExport,
   clearAll,
+  clearPlan,
   defaultSettings,
   deleteDay as dbDeleteDay,
   deleteExpense as dbDeleteExpense,
@@ -10,11 +11,13 @@ import {
   putDay,
   putEvent,
   putExpense,
+  putPlanWeek,
   putSettings,
   replaceAll,
 } from '../lib/db'
 import { emptyDay } from '../lib/scoring'
-import { monthKey, todayKey, uid } from '../lib/date'
+import { emptyWeekRecord, weekId } from '../lib/plan'
+import { monthKey, startOfWeekKey, todayKey, uid } from '../lib/date'
 
 /**
  * Single in-memory source of truth, write-through to IndexedDB.
@@ -32,6 +35,8 @@ export const useStore = create((set, get) => ({
   days: {},
   expenses: [],
   events: [],
+  /** Plan progress, keyed 'w1'..'w16'. See lib/plan.js. */
+  plan: {},
   settings: defaultSettings(),
   /** Bumped whenever a pillar is completed, so the UI can fire a celebration. */
   celebration: null,
@@ -39,8 +44,8 @@ export const useStore = create((set, get) => ({
   async init() {
     if (get().ready) return
     try {
-      const { days, expenses, settings, events } = await loadAll()
-      set({ days, expenses, events, settings, ready: true, error: null })
+      const { days, expenses, settings, events, plan } = await loadAll()
+      set({ days, expenses, events, plan, settings, ready: true, error: null })
 
       // Record the visit so the streak-break notice knows when we were last here.
       const today = todayKey()
@@ -183,6 +188,56 @@ export const useStore = create((set, get) => ({
     await get().patchSettings({ pillars: defaultSettings().pillars })
   },
 
+  /* ----------------------------------------------------------------- plan */
+
+  /** Read-modify-write one plan week. All plan mutations funnel through here. */
+  async patchPlanWeek(n, mutate) {
+    const state = get()
+    const id = weekId(n)
+    const existing = state.plan[id] ?? emptyWeekRecord(n)
+    const next = { ...mutate(existing), id, updatedAt: nowIso() }
+    set({ plan: { ...state.plan, [id]: next } })
+    await putPlanWeek(next)
+    return next
+  },
+
+  async togglePlanTask(n, taskId, value) {
+    let result = false
+    await get().patchPlanWeek(n, (week) => {
+      result = value === undefined ? !week.checks?.[taskId] : Boolean(value)
+      return { ...week, checks: { ...week.checks, [taskId]: result } }
+    })
+    return result
+  },
+
+  async setPlanCount(n, taskId, value) {
+    const next = Math.max(0, Math.round(Number(value) || 0))
+    await get().patchPlanWeek(n, (week) => ({
+      ...week,
+      counts: { ...week.counts, [taskId]: next },
+    }))
+    return next
+  },
+
+  async bumpPlanCount(n, taskId, delta) {
+    const current = Number(get().plan[weekId(n)]?.counts?.[taskId]) || 0
+    return get().setPlanCount(n, taskId, current + delta)
+  },
+
+  async setPlanNote(n, note) {
+    await get().patchPlanWeek(n, (week) => ({ ...week, note }))
+  },
+
+  /** Moving the start date re-dates every week; progress is kept. */
+  async setPlanStart(dateKey) {
+    await get().patchSettings({ planStartedAt: startOfWeekKey(dateKey) })
+  },
+
+  async resetPlan() {
+    set({ plan: {} })
+    await clearPlan()
+  },
+
   /* --------------------------------------------------------------- events */
 
   async recordEvent(type, payload = {}) {
@@ -205,8 +260,8 @@ export const useStore = create((set, get) => ({
   /* ------------------------------------------------------- backup / reset */
 
   exportData() {
-    const { days, expenses, settings, events } = get()
-    return buildExport({ days, expenses, settings, events })
+    const { days, expenses, settings, events, plan } = get()
+    return buildExport({ days, expenses, settings, events, plan })
   },
 
   async importData(raw) {
@@ -214,10 +269,13 @@ export const useStore = create((set, get) => ({
     await replaceAll(parsed)
     const dayMap = {}
     for (const d of parsed.days) dayMap[d.date] = d
+    const planMap = {}
+    for (const w of parsed.plan) planMap[w.id] = w
     set({
       days: dayMap,
       expenses: parsed.expenses,
       events: parsed.events,
+      plan: planMap,
       settings: parsed.settings,
     })
     return parsed
@@ -227,13 +285,13 @@ export const useStore = create((set, get) => ({
     await clearAll()
     const settings = defaultSettings()
     await putSettings(settings)
-    set({ days: {}, expenses: [], events: [], settings })
+    set({ days: {}, expenses: [], events: [], plan: {}, settings })
   },
 
-  /** Replaces all logged history with generated data. Settings are preserved. */
+  /** Replaces all logged history with generated data. Settings and plan are preserved. */
   async loadSeed({ days, expenses }) {
-    const settings = get().settings
-    await replaceAll({ days, expenses, events: [], settings })
+    const { settings, plan } = get()
+    await replaceAll({ days, expenses, events: [], settings, plan: Object.values(plan) })
     const dayMap = {}
     for (const d of days) dayMap[d.date] = d
     set({ days: dayMap, expenses, events: [] })

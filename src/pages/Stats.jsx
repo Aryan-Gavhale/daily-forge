@@ -8,6 +8,7 @@ import Heatmap from '../components/stats/Heatmap'
 import PillarBreakdown from '../components/stats/PillarBreakdown'
 import PersonalBests from '../components/stats/PersonalBests'
 import { useStore } from '../store/useStore'
+import { useIsDesktop } from '../lib/useMediaQuery'
 import { useStreak, useTodayKey } from '../hooks/useForge'
 import { personalBests, pillarWindows, weekOverWeek, xpTrend } from '../lib/stats'
 import { getPillar } from '../data/pillars'
@@ -23,6 +24,7 @@ export function Stats() {
   const settings = useStore((s) => s.settings)
   const today = useTodayKey()
   const streak = useStreak()
+  const desktop = useIsDesktop()
   const [range, setRange] = useState(30)
   const [focusPillar, setFocusPillar] = useState(null)
 
@@ -56,12 +58,16 @@ export function Stats() {
           />
         </Section>
       ) : (
-        <>
-          <Section title={`XP · last ${range} days`} delay={0.02}>
+        <div className="desk-cols">
+          <Section
+            title={`XP · last ${range} days`}
+            delay={0.02}
+            className="lg:col-span-7"
+          >
             <XpChart trend={trend} />
           </Section>
 
-          <Section title="This week vs last week" delay={0.04}>
+          <Section title="This week vs last week" delay={0.04} className="lg:col-span-5">
             <WeekCompare wow={wow} />
           </Section>
 
@@ -69,11 +75,13 @@ export function Stats() {
             title="Consistency"
             subtitle={focusPillar ? getPillar(focusPillar).name : 'Every pillar, day by day'}
             delay={0.06}
+            className="lg:col-span-12"
           >
             <Heatmap
               days={days}
               settings={settings}
               pillar={focusPillar ? getPillar(focusPillar) : null}
+              weeks={desktop ? 30 : 18}
               now={today}
             />
           </Section>
@@ -82,6 +90,7 @@ export function Stats() {
             title={`Pillar breakdown · ${range} days`}
             subtitle="Weakest first. Tap one to filter the grid above."
             delay={0.08}
+            className="lg:col-span-7"
           >
             <PillarBreakdown
               windows={windows}
@@ -91,10 +100,15 @@ export function Stats() {
             />
           </Section>
 
-          <Section title="Personal bests" subtitle="Numbers to beat" delay={0.1}>
+          <Section
+            title="Personal bests"
+            subtitle="Numbers to beat"
+            delay={0.1}
+            className="lg:col-span-5"
+          >
             <PersonalBests bests={bests} streak={streak} />
           </Section>
-        </>
+        </div>
       )}
 
       <div className="h-4" />

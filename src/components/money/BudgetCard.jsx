@@ -16,7 +16,7 @@ export function BudgetCard({ spent, budget, saved, savingsGoal, noSpend, currenc
   const perDay = daysLeft > 0 ? Math.round(remaining / daysLeft) : remaining
 
   return (
-    <div className="px-5 pt-5">
+    <div className="pad-x pt-5">
       <div className="relative overflow-hidden rounded-[28px] border border-hair bg-ink-800/70 p-5 backdrop-blur-xl">
         <div
           className="pointer-events-none absolute -top-20 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full blur-3xl"

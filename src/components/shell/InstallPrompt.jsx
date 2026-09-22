@@ -75,13 +75,13 @@ export function InstallPrompt() {
   return (
     <AnimatePresence>
       {visible && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[65] flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+86px)]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[65] flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+86px)] lg:justify-end lg:px-8 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             transition={spring}
-            className="pointer-events-auto flex w-full max-w-[calc(480px-2rem)] items-center gap-3 rounded-2xl border border-hairStrong glass px-4 py-3 shadow-[0_20px_50px_-18px_rgba(0,0,0,0.9)]"
+            className="pointer-events-auto flex w-full max-w-[calc(480px-2rem)] items-center gap-3 rounded-2xl border border-hairStrong glass px-4 py-3 shadow-[0_20px_50px_-18px_rgba(0,0,0,0.9)] lg:max-w-[380px]"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-flame/15 text-flame">
               <Icon name={iosHint ? 'share' : 'download'} size={17} strokeWidth={2} />

@@ -20,13 +20,13 @@ export function UpdateNotice() {
   return (
     <AnimatePresence>
       {needRefresh && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[66] flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+86px)]">
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[66] flex justify-center px-4 pb-[calc(env(safe-area-inset-bottom,0px)+86px)] lg:justify-end lg:px-8 lg:pb-8">
           <motion.div
             initial={{ opacity: 0, y: 28, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.96 }}
             transition={spring}
-            className="pointer-events-auto flex w-full max-w-[calc(480px-2rem)] items-center gap-3 rounded-2xl border border-hairStrong glass px-4 py-3"
+            className="pointer-events-auto flex w-full max-w-[calc(480px-2rem)] items-center gap-3 rounded-2xl border border-hairStrong glass px-4 py-3 lg:max-w-[380px]"
           >
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-good/15 text-good">
               <Icon name="download" size={17} strokeWidth={2} />

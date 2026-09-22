@@ -13,8 +13,28 @@
 
     --shell-max: 480px;
     --tabbar-h: 64px;
+    --sidenav-w: 244px;
+
+    /*
+      The gutter every top-level block uses. Living in a variable rather than a
+      Tailwind class is what lets a desktop column grid flatten its children's
+      padding in one declaration - see .desk-cols below.
+    */
+    --pad-x: 1.25rem;
 
     color-scheme: dark;
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --pad-x: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    :root {
+      --pad-x: 2rem;
+    }
   }
 
   * {
@@ -65,6 +85,24 @@
     width: 0;
     height: 0;
   }
+
+  /* A desktop window is not a phone: a scrollbar there is information. */
+  @media (min-width: 1024px) and (pointer: fine) {
+    .scroll-area::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .scroll-area::-webkit-scrollbar-thumb {
+      background-clip: content-box;
+      border: 3px solid transparent;
+      border-radius: 999px;
+      background-color: rgba(255, 255, 255, 0.11);
+    }
+
+    .scroll-area:hover::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
 }
 
 @layer components {
@@ -102,6 +140,44 @@
   .label-eyebrow {
     @apply text-2xs font-semibold uppercase tracking-[0.14em] text-white/40;
   }
+
+  /* The gutter a top-level block owns. Every page block uses this, not px-5. */
+  .pad-x {
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+
+  /*
+    Desktop column layout.
+
+    A page is written once, as a single stack of blocks that each carry their
+    own gutter. Wrapping part of that stack in .desk-cols turns it into a grid
+    on a large screen and zeroes the gutter its children were carrying, so the
+    same markup reads correctly at both sizes without a second layout.
+  */
+  @media (min-width: 1024px) {
+    .desk-cols {
+      display: grid;
+      align-items: start;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: 1.25rem;
+      padding-left: var(--pad-x);
+      padding-right: var(--pad-x);
+    }
+
+    .desk-cols > * {
+      --pad-x: 0px;
+      min-width: 0;
+    }
+  }
+
+  /* Content stops growing before a line of text becomes unreadable. */
+  .page-width {
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    max-width: 1320px;
+  }
 }
 
 @layer utilities {
@@ -117,9 +193,9 @@
     margin-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Clears the fixed tab bar plus the home indicator. */
+  /* Clears the fixed tab bar, the home indicator, and the floating log button. */
   .pb-tabbar {
-    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 20px);
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 78px);
   }
 
   .no-select {

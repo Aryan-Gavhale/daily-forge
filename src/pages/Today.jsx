@@ -7,6 +7,7 @@ import VersusPastSelf from '../components/today/VersusPastSelf'
 import StreakBreakNotice from '../components/today/StreakBreakNotice'
 import PillarCard from '../components/pillars/PillarCard'
 import LogSheet from '../components/pillars/LogSheet'
+import PlanStrip from '../components/plan/PlanStrip'
 import Icon from '../components/ui/Icon'
 import { spring, haptic } from '../lib/motion'
 import { useDayEvaluation, useLevel, useStreak, useTodayKey } from '../hooks/useForge'
@@ -63,28 +64,38 @@ export function Today() {
       />
 
       <StreakBreakNotice />
-      <DayHero evaluation={evaluation} streak={streak} />
-      <StreakCard streak={streak} level={level} />
-      <VersusPastSelf />
 
-      <div className="px-5 pt-5">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-[15px] font-semibold tracking-tight text-white">Pillars</h2>
-          <span className="tnum text-[12px] text-white/30">
-            {evaluation.completed}/{evaluation.enabledCount} done
-          </span>
+      <div className="desk-cols">
+        {/* Phone order is hero first, then the grid. A desktop window has room
+            for both at once, so the grid moves alongside rather than below. */}
+        <div className="lg:col-span-5">
+          <DayHero evaluation={evaluation} streak={streak} />
+          <StreakCard streak={streak} level={level} />
+          <PlanStrip />
+          <VersusPastSelf />
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          {evaluation.results.map((result, i) => (
-            <PillarCard
-              key={result.pillarId}
-              evaluation={result}
-              index={i}
-              onOpen={setOpenPillar}
-              onQuickAdd={handleQuickAdd}
-            />
-          ))}
+        <div className="lg:col-span-7">
+          <div className="pad-x pt-5">
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 className="text-[15px] font-semibold tracking-tight text-white">Pillars</h2>
+              <span className="tnum text-[12px] text-white/30">
+                {evaluation.completed}/{evaluation.enabledCount} done
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
+              {evaluation.results.map((result, i) => (
+                <PillarCard
+                  key={result.pillarId}
+                  evaluation={result}
+                  index={i}
+                  onOpen={setOpenPillar}
+                  onQuickAdd={handleQuickAdd}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

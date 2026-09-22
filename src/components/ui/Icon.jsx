@@ -221,6 +221,52 @@ const PATHS = {
       <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
     </>
   ),
+  map: (
+    <>
+      <path d="m3 6.5 6-2.5v13.5l-6 2.5V6.5Z" />
+      <path d="M9 4l6 2.5v13.5L9 17.5" />
+      <path d="m15 6.5 6-2.5v13.5l-6 2.5" />
+    </>
+  ),
+  flag: (
+    <>
+      <path d="M5 21V4" />
+      <path d="M5 4.5h11l-1.8 3.8L16 12H5" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="4.5" y="10.5" width="15" height="10" rx="3" />
+      <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+    </>
+  ),
+  send: (
+    <>
+      <path d="M21 3 10.5 13.5" />
+      <path d="M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z" />
+    </>
+  ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+      <path d="M12 18v3" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.3l3.2 2" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M20 11a8 8 0 0 0-13.8-5.2L4 8" />
+      <path d="M4 4v4h4" />
+      <path d="M4 13a8 8 0 0 0 13.8 5.2L20 16" />
+      <path d="M20 20v-4h-4" />
+    </>
+  ),
 }
 
 export function Icon({ name, size = 22, strokeWidth = 1.7, className = '', ...rest }) {

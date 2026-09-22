@@ -1,9 +1,10 @@
 import { openDB } from 'idb'
 import { PILLARS } from '../data/pillars'
-import { todayKey } from './date'
+import { startOfWeekKey, todayKey } from './date'
 
 export const DB_NAME = 'forge'
-export const DB_VERSION = 1
+/** v2 added the plan store. The upgrade only creates what is missing. */
+export const DB_VERSION = 2
 export const EXPORT_FORMAT = 'forge.backup.v1'
 
 export const STORES = {
@@ -11,6 +12,7 @@ export const STORES = {
   EXPENSES: 'expenses', // keyPath 'id'    - indexed by date and month
   SETTINGS: 'settings', // keyPath 'id'    - single 'app' record
   EVENTS: 'events', // keyPath 'id'    - streak breaks, level ups
+  PLAN: 'plan', // keyPath 'id'    - one record per plan week, 'w1'..'w16'
 }
 
 export const SETTINGS_ID = 'app'
@@ -31,6 +33,9 @@ export function defaultSettings() {
     savingsGoal: 10000,
     startedAt: todayKey(),
     lastOpenedAt: todayKey(),
+    /** The 16-week plan. Week 1 always begins on a Monday. */
+    planEnabled: true,
+    planStartedAt: startOfWeekKey(todayKey()),
     /** Set once the streak-break notice for a given date has been shown. */
     acknowledgedBreak: null,
     hapticsEnabled: true,
@@ -59,6 +64,9 @@ export function getDB() {
           const s = db.createObjectStore(STORES.EVENTS, { keyPath: 'id' })
           s.createIndex('date', 'date')
         }
+        if (!db.objectStoreNames.contains(STORES.PLAN)) {
+          db.createObjectStore(STORES.PLAN, { keyPath: 'id' })
+        }
       },
     })
   }
@@ -67,11 +75,12 @@ export function getDB() {
 
 export async function loadAll() {
   const db = await getDB()
-  const [days, expenses, settingsRec, events] = await Promise.all([
+  const [days, expenses, settingsRec, events, planWeeks] = await Promise.all([
     db.getAll(STORES.DAYS),
     db.getAll(STORES.EXPENSES),
     db.get(STORES.SETTINGS, SETTINGS_ID),
     db.getAll(STORES.EVENTS),
+    db.getAll(STORES.PLAN),
   ])
 
   let settings = settingsRec
@@ -81,12 +90,18 @@ export async function loadAll() {
   } else {
     // Fill in anything a newer build added without clobbering the user's values.
     settings = mergeSettings(defaultSettings(), settings)
+    // A start date derived from today's Monday would drift on every open, so
+    // the first build that sees an older record pins it immediately.
+    if (!settingsRec.planStartedAt) await db.put(STORES.SETTINGS, settings)
   }
 
   const dayMap = {}
   for (const d of days) dayMap[d.date] = d
 
-  return { days: dayMap, expenses, settings, events }
+  const planMap = {}
+  for (const w of planWeeks) planMap[w.id] = w
+
+  return { days: dayMap, expenses, settings, events, plan: planMap }
 }
 
 /** Deep-ish merge that keeps saved per-pillar config and adds any new pillars. */
@@ -128,6 +143,16 @@ export async function putEvent(event) {
   await db.put(STORES.EVENTS, event)
 }
 
+export async function putPlanWeek(week) {
+  const db = await getDB()
+  await db.put(STORES.PLAN, week)
+}
+
+export async function clearPlan() {
+  const db = await getDB()
+  await db.clear(STORES.PLAN)
+}
+
 export async function clearAll() {
   const db = await getDB()
   const tx = db.transaction(Object.values(STORES), 'readwrite')
@@ -141,25 +166,34 @@ export async function clearAll() {
 }
 
 /** Replace the entire database contents in one transaction. */
-export async function replaceAll({ days, expenses, settings, events }) {
+export async function replaceAll({ days, expenses, settings, events, plan = [] }) {
   const db = await getDB()
   const tx = db.transaction(Object.values(STORES), 'readwrite')
   const dayStore = tx.objectStore(STORES.DAYS)
   const expStore = tx.objectStore(STORES.EXPENSES)
   const setStore = tx.objectStore(STORES.SETTINGS)
   const evtStore = tx.objectStore(STORES.EVENTS)
+  const planStore = tx.objectStore(STORES.PLAN)
 
-  await Promise.all([dayStore.clear(), expStore.clear(), setStore.clear(), evtStore.clear()])
+  await Promise.all([
+    dayStore.clear(),
+    expStore.clear(),
+    setStore.clear(),
+    evtStore.clear(),
+    planStore.clear(),
+  ])
 
   for (const d of days) dayStore.put(d)
   for (const e of expenses) expStore.put(e)
   for (const e of events) evtStore.put(e)
+  for (const w of plan) planStore.put(w)
   setStore.put({ ...settings, id: SETTINGS_ID })
 
   await tx.done
 }
 
-export function buildExport({ days, expenses, settings, events }) {
+export function buildExport({ days, expenses, settings, events, plan = {} }) {
+  const planWeeks = Object.values(plan)
   return {
     format: EXPORT_FORMAT,
     app: 'Forge',
@@ -169,11 +203,13 @@ export function buildExport({ days, expenses, settings, events }) {
       days: Object.keys(days).length,
       expenses: expenses.length,
       events: events.length,
+      plan: planWeeks.length,
     },
     settings,
     days: Object.values(days).sort((a, b) => a.date.localeCompare(b.date)),
     expenses,
     events,
+    plan: planWeeks,
   }
 }
 
@@ -195,7 +231,9 @@ export function parseImport(raw) {
   const days = parsed.days.filter((d) => d && typeof d.date === 'string')
   const expenses = (parsed.expenses ?? []).filter((e) => e && typeof e.id === 'string')
   const events = (parsed.events ?? []).filter((e) => e && typeof e.id === 'string')
+  // Backups written before the plan existed simply have no plan records.
+  const plan = (parsed.plan ?? []).filter((w) => w && typeof w.id === 'string')
   const settings = mergeSettings(defaultSettings(), parsed.settings ?? {})
 
-  return { days, expenses, events, settings }
+  return { days, expenses, events, plan, settings }
 }

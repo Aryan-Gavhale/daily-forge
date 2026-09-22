@@ -32,7 +32,7 @@ export function VersusPastSelf() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay: 0.06 }}
-      className="px-5 pt-3"
+      className="pad-x pt-3"
     >
       <div className="flex items-center gap-3 rounded-card border border-hair bg-ink-800/60 px-4 py-3 backdrop-blur-xl">
         <span

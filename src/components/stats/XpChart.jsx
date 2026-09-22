@@ -38,7 +38,9 @@ export function XpChart({ trend }) {
         </div>
       </div>
 
-      <div className="mt-3 h-[150px] w-full pr-1">
+      {/* A desktop window has the height to spare, and a wider chart with the
+          same 150px would read as a flat line. */}
+      <div className="mt-3 h-[150px] w-full pr-1 lg:h-[232px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={trend} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
             <defs>

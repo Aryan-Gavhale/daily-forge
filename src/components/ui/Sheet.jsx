@@ -2,14 +2,18 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useMotionValue } from 'framer-motion'
 import { easeSheet, spring, useReducedMotion } from '../../lib/motion'
+import { useIsWide } from '../../lib/useMediaQuery'
 import { useUI } from '../../store/useUI'
 
 /**
- * iOS-style bottom sheet.
+ * iOS-style bottom sheet, which becomes a centred dialog once there is a
+ * pointer and room for one.
  *
- * Drag down to dismiss with velocity, rubber-band resistance at the top, a grab
- * handle, and the page behind it scaling back (handled in AppShell, which reads
- * the sheet count this component maintains).
+ * On a phone: drag down to dismiss with velocity, rubber-band resistance at
+ * the top, a grab handle, and the page behind it scaling back (handled in
+ * AppShell, which reads the sheet count this component maintains). On a wide
+ * window none of that applies - dragging a dialog with a mouse is theatre -
+ * so it scales in from the centre instead.
  */
 export function Sheet({
   open,
@@ -24,11 +28,13 @@ export function Sheet({
 }) {
   const y = useMotionValue(0)
   const reduced = useReducedMotion()
+  const wide = useIsWide()
   const pushSheet = useUI((s) => s.pushSheet)
   const popSheet = useUI((s) => s.popSheet)
   const scrollRef = useRef(null)
   /** Only allow drag-to-dismiss when the sheet body is scrolled to the top. */
   const atTop = useRef(true)
+  const draggable = dismissible && !reduced && !wide
 
   useEffect(() => {
     if (!open) return
@@ -66,7 +72,11 @@ export function Sheet({
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
+        <div
+          className={`fixed inset-0 z-50 flex justify-center ${
+            wide ? 'items-center p-6' : 'items-end'
+          }`}
+        >
           <motion.div
             className="absolute inset-0 bg-black/60"
             style={{ backdropFilter: 'blur(3px)' }}
@@ -78,13 +88,17 @@ export function Sheet({
           />
 
           <motion.div
-            className="relative w-full max-w-shell overflow-hidden rounded-t-sheet border-t border-x border-hairStrong bg-ink-850 shadow-[0_-24px_70px_-20px_rgba(0,0,0,0.9)]"
-            style={{ y, maxHeight, touchAction: 'pan-y' }}
-            initial={reduced ? { opacity: 0 } : { y: '100%' }}
-            animate={reduced ? { opacity: 1 } : { y: 0 }}
-            exit={reduced ? { opacity: 0 } : { y: '100%' }}
-            transition={easeSheet}
-            drag={dismissible && !reduced ? 'y' : false}
+            className={`relative w-full max-w-shell overflow-hidden border-hairStrong bg-ink-850 ${
+              wide
+                ? 'rounded-sheet border shadow-[0_40px_100px_-30px_rgba(0,0,0,0.95)]'
+                : 'rounded-t-sheet border-x border-t shadow-[0_-24px_70px_-20px_rgba(0,0,0,0.9)]'
+            }`}
+            style={{ y, maxHeight: wide ? '84vh' : maxHeight, touchAction: 'pan-y' }}
+            initial={reduced ? { opacity: 0 } : wide ? { opacity: 0, scale: 0.96, y: 12 } : { y: '100%' }}
+            animate={reduced ? { opacity: 1 } : wide ? { opacity: 1, scale: 1, y: 0 } : { y: 0 }}
+            exit={reduced ? { opacity: 0 } : wide ? { opacity: 0, scale: 0.97 } : { y: '100%' }}
+            transition={wide ? spring : easeSheet}
+            drag={draggable ? 'y' : false}
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.02, bottom: 0.55 }}
             dragDirectionLock
@@ -103,9 +117,13 @@ export function Sheet({
               />
             )}
 
-            <div className="relative flex justify-center pt-3 pb-1">
-              <div className="h-1 w-9 rounded-full bg-white/25" />
-            </div>
+            {wide ? (
+              <div className="pt-5" />
+            ) : (
+              <div className="relative flex justify-center pt-3 pb-1">
+                <div className="h-1 w-9 rounded-full bg-white/25" />
+              </div>
+            )}
 
             {(title || subtitle) && (
               <div className="relative px-6 pb-3 pt-1 text-center">
@@ -121,12 +139,16 @@ export function Sheet({
             <div
               ref={scrollRef}
               className="scroll-area relative px-5"
-              style={{ maxHeight: `calc(${maxHeight} - 140px)` }}
+              style={{ maxHeight: `calc(${wide ? '84vh' : maxHeight} - 150px)` }}
             >
               {children}
             </div>
 
-            <div className="relative px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+18px)]">
+            <div
+              className={`relative px-5 pt-3 ${
+                wide ? 'pb-5' : 'pb-[calc(env(safe-area-inset-bottom,0px)+18px)]'
+              }`}
+            >
               {footer}
             </div>
           </motion.div>

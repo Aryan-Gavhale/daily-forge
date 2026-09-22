@@ -8,7 +8,7 @@ export function Section({ title, action, children, delay = 0, className = '', su
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...spring, delay }}
-      className={`px-5 pt-6 ${className}`}
+      className={`pad-x pt-6 ${className}`}
     >
       {(title || action) && (
         <div className="mb-3 flex items-baseline justify-between gap-3">
